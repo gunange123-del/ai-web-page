@@ -1,0 +1,7 @@
+{
+  "name": "Copy of Cinematic Hand-Controlled Christmas Tree",
+  "description": "An interactive 3D particle system Christmas tree controlled by hand gestures using MediaPipe and Three.js. Includes photo cloud and cinematic effects.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
