@@ -3,9 +3,10 @@ import React, { useState, useCallback, useEffect } from 'react';
 import TreeScene from './components/TreeScene';
 import HandTracker from './components/HandTracker';
 import { TreeState, HandGestureResult } from './types';
-import { Upload, Hand, Minimize2, Maximize2, Zap } from 'lucide-react';
+import { Upload, Hand, Minimize2, Maximize2, Zap, Play, X, Image as ImageIcon } from 'lucide-react';
 
 const App: React.FC = () => {
+  const [started, setStarted] = useState(false);
   const [state, setState] = useState<TreeState>(TreeState.CLOSED);
   const [gesture, setGesture] = useState<HandGestureResult>({
     gesture: 'NONE',
@@ -13,12 +14,12 @@ const App: React.FC = () => {
     rotation: { x: 0, y: 0, z: 0 }
   });
   const [photos, setPhotos] = useState<string[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleGesture = useCallback((res: HandGestureResult) => {
     setGesture(res);
-    
-    // Auto state transition based on gesture
-    // FIX: Simplified the logic to avoid unreachable code where 'OPEN' was checked after already being handled.
+    if (!started) return;
+
     if (res.gesture === 'FIST') {
       setState(TreeState.CLOSED);
     } else if (res.gesture === 'PINCH' && state === TreeState.EXPLODED) {
@@ -26,91 +27,181 @@ const App: React.FC = () => {
     } else if (res.gesture === 'OPEN') {
       setState(TreeState.EXPLODED);
     }
-  }, [state]);
+  }, [state, started]);
 
   const onFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      // FIX: Added explicit type cast to 'Blob' to resolve the 'unknown' type error for URL.createObjectURL.
       const newPhotos = Array.from(files).map(f => URL.createObjectURL(f as Blob));
       setPhotos(prev => [...prev, ...newPhotos]);
     }
   };
 
   return (
-    <div className="relative w-screen h-screen bg-[#050505] text-white overflow-hidden">
-      {/* Three.js Layer */}
+    <div className="relative w-screen h-screen bg-[#020202] text-white overflow-hidden">
+      {/* Intro Landing Screen */}
+      {!started && (
+        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-xl transition-all duration-1000">
+          <div className="max-w-2xl text-center px-6 animate-in fade-in zoom-in duration-700">
+            <h1 className="text-7xl font-serif tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-amber-100 to-amber-500 mb-4">
+              Noël Éthéré
+            </h1>
+            <p className="text-amber-500/60 uppercase tracking-[0.4em] text-xs mb-12">A Cinematic Gesture-Controlled Holiday Experience</p>
+            
+            <div className="grid grid-cols-3 gap-8 mb-16 opacity-80">
+                <GestureGuide icon={<Minimize2 size={24}/>} label="Fist" desc="Gather Tree" />
+                <GestureGuide icon={<Maximize2 size={24}/>} label="Palm" desc="Explode Cloud" />
+                <GestureGuide icon={<Hand size={24}/>} label="Pinch" desc="Zoom Memory" />
+            </div>
+
+            <button 
+              onClick={() => setStarted(true)}
+              className="group relative flex items-center gap-4 mx-auto btn-gold px-12 py-5 rounded-full"
+            >
+              <Play fill="black" size={20} />
+              <span className="uppercase tracking-[0.2em] text-sm">Enter Experience</span>
+            </button>
+            <p className="mt-8 text-[10px] text-white/30 uppercase tracking-widest">Camera permissions required for interaction</p>
+          </div>
+        </div>
+      )}
+
+      {/* 3D Scene Layer */}
       <TreeScene state={state} gesture={gesture} photos={photos} />
 
-      {/* MediaPipe Layer */}
-      <HandTracker onGesture={handleGesture} />
+      {/* MediaPipe Layer (only show preview when started) */}
+      {started && <HandTracker onGesture={handleGesture} />}
 
-      {/* UI Overlay */}
-      <div className="absolute top-0 left-0 w-full h-full pointer-events-none flex flex-col justify-between p-8">
+      {/* UI Overlay - Web Page Interface */}
+      <div className={`absolute top-0 left-0 w-full h-full pointer-events-none flex flex-col justify-between p-10 transition-all duration-1000 ${started ? 'opacity-100' : 'opacity-0 scale-105'}`}>
         
-        {/* Header */}
+        {/* Header Navigation */}
         <div className="flex justify-between items-start pointer-events-auto">
-          <div>
-            <h1 className="text-4xl font-light tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500">
+          <div className="group cursor-default">
+            <h2 className="text-3xl font-serif tracking-tighter text-amber-200 group-hover:text-amber-400 transition-colors">
               NOËL ÉTHÉRÉ
-            </h1>
-            <p className="text-xs text-amber-500/60 uppercase tracking-widest mt-1">Cinematic Hand Gesture Experience</p>
+            </h2>
+            <div className="flex items-center gap-2 mt-1">
+                <div className="w-12 h-[1px] bg-amber-500/40" />
+                <span className="text-[9px] text-amber-500/60 uppercase tracking-[0.3em]">Interactive Gallery</span>
+            </div>
           </div>
           
           <div className="flex gap-4">
-            <label className="cursor-pointer group flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-full transition-all">
-              <Upload size={16} className="text-amber-400" />
-              <span className="text-xs uppercase tracking-wider font-semibold">Upload Memories</span>
+            <button 
+                onClick={() => setSidebarOpen(true)}
+                className="glass hover:bg-white/10 p-4 rounded-full transition-all group relative"
+            >
+                <ImageIcon size={20} className="text-amber-400" />
+                {photos.length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-amber-600 text-black text-[10px] font-bold flex items-center justify-center rounded-full border border-black">
+                        {photos.length}
+                    </span>
+                )}
+            </button>
+            <label className="cursor-pointer glass hover:bg-white/10 flex items-center gap-3 px-6 py-4 rounded-full transition-all">
+              <Upload size={18} className="text-amber-400" />
+              <span className="text-xs uppercase tracking-[0.15em] font-semibold">Add Memory</span>
               <input type="file" multiple className="hidden" onChange={onFileUpload} accept="image/*" />
             </label>
           </div>
         </div>
 
-        {/* Center Hint (only if no photos or initial) */}
-        {photos.length === 0 && (
-          <div className="flex flex-col items-center justify-center opacity-40">
-            <Zap size={48} className="mb-4 text-amber-500 animate-pulse" />
-            <p className="text-sm tracking-widest uppercase">Upload photos to begin the cloud</p>
+        {/* Center Prompt */}
+        {photos.length === 0 && started && (
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <div className="w-20 h-20 glass rounded-full flex items-center justify-center animate-bounce">
+                <Zap size={32} className="text-amber-400" />
+            </div>
+            <p className="text-sm font-light text-amber-100/50 uppercase tracking-[0.5em]">Upload memories to form the cloud</p>
           </div>
         )}
 
-        {/* Footer / Status */}
+        {/* Dynamic State Feedback (Floating Web Cards) */}
         <div className="flex justify-between items-end pointer-events-auto">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-3 bg-black/40 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/5">
-              <div className="flex items-center gap-2 pr-4 border-r border-white/10">
-                <div className={`w-2 h-2 rounded-full ${gesture.gesture === 'NONE' ? 'bg-red-500' : 'bg-green-500'} animate-pulse`} />
-                <span className="text-[10px] uppercase font-bold tracking-widest text-white/50">Hand Link</span>
-              </div>
-              <div className="flex gap-6">
-                <StatusItem icon={<Minimize2 size={14}/>} label="Fist" sub="Close Tree" active={gesture.gesture === 'FIST'} />
-                <StatusItem icon={<Maximize2 size={14}/>} label="Open" sub="Explode" active={gesture.gesture === 'OPEN'} />
-                <StatusItem icon={<Hand size={14}/>} label="Pinch" sub="Zoom Photo" active={gesture.gesture === 'PINCH'} />
-              </div>
-            </div>
+          <div className="flex gap-4">
+            <ControlCard 
+                icon={<Minimize2 size={18}/>} 
+                label="Gathered" 
+                active={state === TreeState.CLOSED} 
+                detected={gesture.gesture === 'FIST'}
+            />
+            <ControlCard 
+                icon={<Maximize2 size={18}/>} 
+                label="Exploded" 
+                active={state === TreeState.EXPLODED} 
+                detected={gesture.gesture === 'OPEN'}
+            />
+             <ControlCard 
+                icon={<Hand size={18}/>} 
+                label="Zooming" 
+                active={state === TreeState.ZOOMED} 
+                detected={gesture.gesture === 'PINCH'}
+            />
           </div>
 
           <div className="text-right">
-            <div className="text-[10px] uppercase tracking-[0.3em] text-amber-500/40 mb-1">State Configuration</div>
-            <div className="text-2xl font-light text-amber-100/80">{state}</div>
+            <div className="text-[9px] uppercase tracking-[0.4em] text-amber-500/40 mb-2 font-bold">System Status</div>
+            <div className="text-sm font-light text-white/80 glass px-6 py-2 rounded-full border border-white/5">
+                {gesture.gesture === 'NONE' ? 'WAITING FOR HAND...' : 'INTERACTING'}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Vignette & Grain */}
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.6)_100%)]" />
+      {/* Sidebar Drawer */}
+      <div className={`fixed top-0 right-0 h-full w-80 glass z-[110] transition-transform duration-500 transform ${sidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className="p-8 h-full flex flex-col">
+            <div className="flex justify-between items-center mb-10">
+                <h3 className="text-xl font-serif text-amber-200">The Cloud</h3>
+                <button onClick={() => setSidebarOpen(false)} className="text-white/40 hover:text-white transition-colors">
+                    <X size={24} />
+                </button>
+            </div>
+            <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+                {photos.length === 0 ? (
+                    <p className="text-xs text-center text-white/20 uppercase tracking-widest mt-20">Your gallery is empty</p>
+                ) : (
+                    photos.map((url, i) => (
+                        <div key={i} className="group relative aspect-video rounded-lg overflow-hidden border border-white/10 hover:border-amber-500/50 transition-all">
+                            <img src={url} alt={`Memory ${i}`} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
+                            <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-all" />
+                        </div>
+                    ))
+                )}
+            </div>
+            <div className="mt-8 pt-8 border-t border-white/5">
+                <p className="text-[9px] text-white/30 uppercase tracking-widest leading-relaxed">
+                    Interactive photo cloud generated from local uploads. Data remains in session.
+                </p>
+            </div>
+        </div>
+      </div>
+
+      {/* Vignette Overlay */}
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.8)_100%)]" />
     </div>
   );
 };
 
-const StatusItem: React.FC<{ icon: React.ReactNode, label: string, sub: string, active: boolean }> = ({ icon, label, sub, active }) => (
-  <div className={`flex items-center gap-3 transition-all duration-300 ${active ? 'scale-110' : 'opacity-40 grayscale'}`}>
-    <div className={`p-2 rounded-lg ${active ? 'bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.5)]' : 'bg-white/5 text-white'}`}>
+const GestureGuide: React.FC<{ icon: React.ReactNode, label: string, desc: string }> = ({ icon, label, desc }) => (
+    <div className="flex flex-col items-center">
+        <div className="w-14 h-14 glass rounded-2xl flex items-center justify-center text-amber-400 mb-3">
+            {icon}
+        </div>
+        <div className="text-[10px] font-bold uppercase tracking-widest text-white/80">{label}</div>
+        <div className="text-[8px] text-white/40 uppercase mt-1 tracking-tighter">{desc}</div>
+    </div>
+);
+
+const ControlCard: React.FC<{ icon: React.ReactNode, label: string, active: boolean, detected: boolean }> = ({ icon, label, active, detected }) => (
+  <div className={`px-6 py-4 rounded-2xl border transition-all duration-500 flex items-center gap-4 ${active ? 'glass border-amber-500/50 scale-105 shadow-[0_0_30px_rgba(212,175,55,0.1)]' : 'bg-black/20 border-white/5 opacity-40 grayscale'}`}>
+    <div className={`p-2 rounded-lg ${detected ? 'text-amber-400 scale-125' : 'text-white'} transition-all duration-300`}>
       {icon}
     </div>
-    <div className="flex flex-col leading-none">
-      <span className="text-[10px] font-bold uppercase tracking-wider">{label}</span>
-      <span className="text-[8px] uppercase text-white/40 mt-1">{sub}</span>
+    <div className="flex flex-col">
+      <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{label}</span>
+      <div className={`h-1 rounded-full mt-2 transition-all duration-500 ${active ? 'w-full bg-amber-500' : 'w-0 bg-white/20'}`} />
     </div>
   </div>
 );
