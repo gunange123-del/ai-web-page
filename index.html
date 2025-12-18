@@ -4,55 +4,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Noël Éthéré | Hand-Controlled 3D Experience</title>
+    <title>Hand-Controlled Christmas Tree</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --gold: #D4AF37;
-            --red: #C41E3A;
-            --green: #1A3D1A;
-        }
         body {
             margin: 0;
             overflow: hidden;
-            background-color: #020202;
+            background-color: #050505;
             font-family: 'Inter', sans-serif;
-            color: white;
-        }
-        .font-serif {
-            font-family: 'Bodoni Moda', serif;
         }
         canvas {
             display: block;
-        }
-        /* Cinematic scanline effect */
-        .scanlines::before {
-            content: " ";
-            display: block;
-            position: absolute;
-            top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 10;
-            background-size: 100% 4px, 3px 100%;
-            pointer-events: none;
-        }
-        .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .btn-gold {
-            background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%);
-            color: black;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        .btn-gold:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
         }
     </style>
 <script type="importmap">
@@ -72,7 +36,7 @@
 }
 </script>
 </head>
-<body class="scanlines">
+<body>
     <div id="root"></div>
 </body>
 </html>

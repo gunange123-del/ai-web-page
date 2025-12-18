@@ -1,6 +1,6 @@
 {
-  "name": "Noël Éthéré Cinematic Experience",
-  "description": "A high-end hand-controlled 3D photo cloud and Christmas tree experience using Three.js and MediaPipe Hands.",
+  "name": "Copy of Cinematic Hand-Controlled Christmas Tree",
+  "description": "An interactive 3D particle system Christmas tree controlled by hand gestures using MediaPipe and Three.js. Includes photo cloud and cinematic effects.",
   "requestFramePermissions": [
     "camera"
   ]
